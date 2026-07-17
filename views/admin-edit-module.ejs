@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= editMode === 'create' ? 'Cipta Modul Baru' : 'Edit Modul' %> - Admin MSN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-4xl mx-auto py-12 px-6">
+        <!-- Header -->
+        <div class="mb-8">
+            <a href="/admin-mace/modules" class="text-blue-600 hover:text-blue-800 text-sm font-medium mb-4 inline-block flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                Kembali ke Senarai Modul
+            </a>
+            <h1 class="text-3xl font-bold text-gray-900"><%= editMode === 'create' ? '📚 Cipta Modul Baru' : '✏️ Edit Modul' %></h1>
+            <p class="text-gray-500 mt-2"><%= editMode === 'create' ? 'Tambah modul pembelajaran baharu untuk atlit.' : 'Kemaskini maklumat modul sedia ada.' %></p>
+        </div>
+
+        <!-- Form -->
+        <form action="" method="POST" class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+            
+            <!-- Tajuk Modul -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Tajuk Modul *</label>
+                <input type="text" name="title" value="<%= module ? module.title : '' %>" required 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    placeholder="Contoh: Pengenalan Kepada Sukan">
+            </div>
+
+            <!-- Deskripsi (TinyMCE) -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi / Kandungan *</label>
+                <textarea id="description" name="description"><%= module ? module.description : '' %></textarea>
+            </div>
+
+            <!-- Featured Image Upload -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Featured Image (Gambar Utama)</label>
+                <% if (module && module.thumbnail) { %>
+                    <div class="mb-4">
+                        <img src="<%= module.thumbnail %>" alt="Current Featured Image" class="w-48 h-32 object-cover rounded-lg border border-gray-200">
+                    </div>
+                <% } %>
+                
+                <div class="space-y-3">
+                    <div>
+                        <span class="block text-xs text-gray-500 mb-1">Muat naik fail gambar:</span>
+                        <input type="file" id="thumbnailFile" accept="image/*" 
+                            class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                        <div id="image-upload-status" class="text-xs mt-1 hidden font-semibold"></div>
+                    </div>
+                    
+                    <div class="relative flex py-2 items-center">
+                        <div class="flex-grow border-t border-gray-200"></div>
+                        <span class="flex-shrink mx-4 text-gray-400 text-xs uppercase">Atau</span>
+                        <div class="flex-grow border-t border-gray-200"></div>
+                    </div>
+                    
+                    <div>
+                        <span class="block text-xs text-gray-500 mb-1">Masukkan URL Gambar:</span>
+                        <input type="text" name="featuredImageUrl" id="featuredImageUrl" value="<%= module ? module.thumbnail : '' %>" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm"
+                            placeholder="Contoh: https://example.com/gambar.jpg atau /uploads/gambar.webp">
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">Imej akan dipampatkan secara automatik untuk mengoptimumkan saiz storan tanpa menjejaskan kualiti.</p>
+            </div>
+
+            <!-- Order & Status -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Order (Susunan)</label>
+                    <input type="number" name="order" value="<%= module ? module.order : 0 %>" min="0"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                </div>
+                <div class="flex items-center mt-8">
+                    <input type="checkbox" name="isActive" id="isActive" value="on" <%= module && module.isActive ? 'checked' : '' %>
+                        class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <label for="isActive" class="ml-3 text-sm font-semibold text-gray-700">Aktifkan Modul Ini</label>
+                </div>
+            </div>
+
+            <!-- Level System Settings -->
+            <div class="mb-8 p-6 bg-blue-50 rounded-xl border border-blue-100">
+                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    Tetapan Sistem Level
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex items-start">
+                        <input type="checkbox" name="hasLevels" id="hasLevels" value="on" <%= module && module.hasLevels ? 'checked' : '' %>
+                            class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1">
+                        <div class="ml-3">
+                            <label for="hasLevels" class="text-sm font-semibold text-gray-700 block">Enable Level System</label>
+                            <p class="text-xs text-gray-500 mt-1">Jika diaktifkan, lesson akan disusun dalam Level 1, Level 2, dll. Jika tidak, lesson berdiri sendiri dalam modul.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <input type="checkbox" name="isSequential" id="isSequential" value="on" <%= module && module.isSequential ? 'checked' : '' %>
+                            class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1">
+                        <div class="ml-3">
+                            <label for="isSequential" class="text-sm font-semibold text-gray-700 block">Sequential Access (Wajib Ikut Turutan)</label>
+                            <p class="text-xs text-gray-500 mt-1">Pelajar wajib lengkapkan Level 1 sebelum boleh akses Level 2, dan seterusnya.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Minimum Passing Score (%)</label>
+                    <input type="number" name="minPassingScore" value="<%= module ? module.minPassingScore || 0 : 0 %>" min="0" max="100"
+                        class="w-full md:w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    <p class="text-xs text-gray-500 mt-2">Markah minimum yang diperlukan untuk unlock level seterusnya (jika sequential). Masukkan 0 jika tiada requirement.</p>
+                </div>
+            </div>
+
+            <!-- Certificate Settings -->
+            <div class="mb-8 p-6 bg-yellow-50/50 rounded-xl border border-yellow-100">
+                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
+                    Tetapan Sijil Modul
+                </h3>
+                
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <input type="checkbox" name="hasCertificate" id="hasCertificate" value="on" <%= module && module.hasCertificate ? 'checked' : '' %>
+                            class="w-5 h-5 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500 mt-1"
+                            onchange="toggleCertificateTemplateSelect(this.checked)">
+                        <div class="ml-3">
+                            <label for="hasCertificate" class="text-sm font-semibold text-gray-700 block">Sediakan Sijil untuk Modul Ini</label>
+                            <p class="text-xs text-gray-500 mt-1">Jika diaktifkan, atlit yang menamatkan modul ini akan menerima sijil khas.</p>
+                        </div>
+                    </div>
+                    
+                    <div id="certificateTemplateContainer" class="<%= module && module.hasCertificate ? '' : 'hidden' %> mt-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Template Sijil</label>
+                        <select name="certificateTemplate" class="w-full md:w-1/2 border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                            <option value="">-- Gunakan Template Aktif Lalai --</option>
+                            <% (certificateTemplates || []).forEach(t => { %>
+                                <option value="<%= t._id %>" <%= module && module.certificateTemplate && module.certificateTemplate.toString() === t._id.toString() ? 'selected' : '' %>><%= t.name %></option>
+                            <% }) %>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-2">Pilih template sijil khusus untuk modul ini. Jika tiada dipilih, sistem akan menggunakan template sijil aktif utama.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Levels Management UI (Only when editing and module system is enabled) -->
+            <% if (editMode === 'edit') { %>
+                <div id="levels-manager-section" class="mb-8 p-6 bg-purple-50/50 rounded-xl border border-purple-100 <%= module.hasLevels ? '' : 'hidden' %>">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-purple-900 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                            Peringkat Modul (Levels)
+                        </h3>
+                        <button type="button" onclick="openAddLevelModal()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs px-4 py-2 rounded-lg font-semibold transition shadow-sm">
+                            + Tambah Level
+                        </button>
+                    </div>
+
+                    <!-- Levels List Container -->
+                    <div id="levels-list" class="space-y-3">
+                        <p class="text-sm text-gray-500 italic">Memuatkan peringkat...</p>
+                    </div>
+                </div>
+            <% } %>
+
+            <!-- Submit Buttons -->
+            <div class="flex gap-4 pt-6 border-t border-gray-100">
+                <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition shadow-sm">
+                    <%= editMode === 'create' ? '✅ Cipta Modul' : '💾 Simpan Perubahan' %>
+                </button>
+                <a href="/admin-mace/modules" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium transition text-center">
+                    Batal
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- TinyMCE Initialization -->
+    <script>
+        tinymce.init({
+            selector: '#description',
+            height: 400,
+            plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+            toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+            content_style: 'body { font-family: Inter, sans-serif; font-size: 16px }',
+            language: 'ms',
+            menubar: true,
+            branding: false,
+            promotion: false
+        });
+
+        // Client-side image compression & direct-to-R2 upload logic
+        const thumbnailFileInput = document.getElementById('thumbnailFile');
+        const featuredImageUrlInput = document.getElementById('featuredImageUrl');
+        const uploadStatusDiv = document.getElementById('image-upload-status');
+        const submitBtn = document.querySelector('button[type="submit"]');
+
+        const compressImageClient = (file) => {
+            return new Promise((resolve) => {
+                // Tentukan jenis fail berdasarkan file.type ATAU extension
+                let fileType = file.type ? file.type.toLowerCase() : '';
+                const skipExtMatch = file.name.match(/\.(webp|gif|svg)$/i);
+                if (skipExtMatch) {
+                    const ext = skipExtMatch[1].toLowerCase();
+                    if (ext === 'webp') fileType = 'image/webp';
+                    else if (ext === 'gif') fileType = 'image/gif';
+                    else if (ext === 'svg') fileType = 'image/svg+xml';
+                }
+                
+                // Jika fail adalah format yang tak patut dimampatkan (cth: webp/gif), terus guna fail asal
+                // Tapi pastikan file object mempunyai type yang betul
+                if (['image/webp', 'image/gif', 'image/svg+xml'].includes(fileType)) {
+                    // Jika file.type kosong/salah, buat File baru dengan type yang betul
+                    if (file.type !== fileType) {
+                        const fixedFile = new File([file], file.name, { type: fileType, lastModified: file.lastModified });
+                        return resolve(fixedFile);
+                    }
+                    return resolve(file);
+                }
+
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 1200;
+                        const MAX_HEIGHT = 800;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height *= MAX_WIDTH / width;
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width *= MAX_HEIGHT / height;
+                                height = MAX_HEIGHT;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        let type = file.type ? file.type.toLowerCase() : '';
+                        const extMatch = file.name.match(/\.(jpg|jpeg|png|webp)$/i);
+                        if (extMatch && (!type || !['image/jpeg', 'image/png', 'image/webp'].includes(type))) {
+                            const ext = extMatch[1].toLowerCase();
+                            if (ext === 'jpg' || ext === 'jpeg') type = 'image/jpeg';
+                            else if (ext === 'png') type = 'image/png';
+                            else if (ext === 'webp') type = 'image/webp';
+                        }
+                        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                        const outputType = allowedTypes.includes(type) ? type : 'image/jpeg';
+                        const extension = outputType === 'image/jpeg' ? '.jpg' : outputType === 'image/png' ? '.png' : '.webp';
+                        
+                        canvas.toBlob((blob) => {
+                            resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + extension, {
+                                type: outputType,
+                                lastModified: Date.now()
+                            }));
+                        }, outputType, 0.85);
+                    };
+                };
+            });
+        };
+
+        thumbnailFileInput.addEventListener('change', async function() {
+            const file = this.files[0];
+            if (!file) return;
+
+            uploadStatusDiv.classList.remove('hidden');
+            uploadStatusDiv.className = 'text-xs mt-1 font-semibold text-blue-600';
+            uploadStatusDiv.innerText = 'Memampatkan gambar...';
+            submitBtn.disabled = true;
+
+            try {
+                // 1. Compress client-side
+                const compressedFile = await compressImageClient(file);
+                
+                uploadStatusDiv.innerText = 'Menyediakan saluran muat naik...';
+
+                // 2. Request presigned URL from server
+                const res = await fetch(`/admin-mace/api/presigned-url?filename=${encodeURIComponent(compressedFile.name)}&contentType=${encodeURIComponent(compressedFile.type)}`);
+                const data = await res.json();
+
+                if (!res.ok || !data.uploadUrl) {
+                    throw new Error(data.error || 'Gagal menjana saluran muat naik');
+                }
+
+                uploadStatusDiv.innerText = 'Memuat naik gambar... 0%';
+
+                // 3. Perform upload
+                const xhr = new XMLHttpRequest();
+                
+                if (data.isR2) {
+                    // PUT to Cloudflare R2 directly
+                    xhr.open('PUT', data.uploadUrl, true);
+                    xhr.setRequestHeader('Content-Type', compressedFile.type);
+                    
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const percent = Math.round((e.loaded / e.total) * 100);
+                            uploadStatusDiv.innerText = `Memuat naik gambar... ${percent}%`;
+                        }
+                    };
+
+                    xhr.onload = () => {
+                        if (xhr.status === 200) {
+                            featuredImageUrlInput.value = data.publicUrl;
+                            
+                            // Update current thumbnail preview if it exists
+                            let previewImg = document.querySelector('img[alt="Current Featured Image"]');
+                            if (previewImg) {
+                                previewImg.src = data.publicUrl;
+                            } else {
+                                // Create preview
+                                const container = featuredImageUrlInput.parentElement.parentElement.parentElement;
+                                const previewDiv = document.createElement('div');
+                                previewDiv.className = 'mb-4';
+                                previewDiv.innerHTML = `<img src="${data.publicUrl}" alt="Current Featured Image" class="w-48 h-32 object-cover rounded-lg border border-gray-200">`;
+                                container.insertBefore(previewDiv, container.firstChild);
+                            }
+
+                            uploadStatusDiv.className = 'text-xs mt-1 font-semibold text-green-600';
+                            uploadStatusDiv.innerText = '✓ Imej berjaya dimuat naik ke awan!';
+                            submitBtn.disabled = false;
+                        } else {
+                            uploadStatusDiv.className = 'text-xs mt-1 font-semibold text-red-600';
+                            uploadStatusDiv.innerText = '✗ Gagal memuat naik imej.';
+                            submitBtn.disabled = false;
+                        }
+                    };
+                    
+                    xhr.send(compressedFile);
+                } else {
+                    // Local fallback POST
+                    const formData = new FormData();
+                    formData.append('file', compressedFile);
+                    formData.append('fileKey', data.fileKey);
+
+                    xhr.open('POST', data.uploadUrl, true);
+                    
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const percent = Math.round((e.loaded / e.total) * 100);
+                            uploadStatusDiv.innerText = `Memuat naik gambar... ${percent}%`;
+                        }
+                    };
+
+                    xhr.onload = () => {
+                        const response = JSON.parse(xhr.responseText || '{}');
+                        if (xhr.status === 200 && response.success) {
+                            featuredImageUrlInput.value = response.url;
+                            
+                            let previewImg = document.querySelector('img[alt="Current Featured Image"]');
+                            if (previewImg) previewImg.src = response.url;
+
+                            uploadStatusDiv.className = 'text-xs mt-1 font-semibold text-green-600';
+                            uploadStatusDiv.innerText = '✓ Imej disimpan secara lokal!';
+                            submitBtn.disabled = false;
+                        } else {
+                            uploadStatusDiv.className = 'text-xs mt-1 font-semibold text-red-600';
+                            uploadStatusDiv.innerText = '✗ Gagal menyimpan imej lokal.';
+                            submitBtn.disabled = false;
+                        }
+                    };
+
+                    xhr.send(formData);
+                }
+
+            } catch (err) {
+                console.error(err);
+                uploadStatusDiv.className = 'text-xs mt-1 font-semibold text-red-600';
+                uploadStatusDiv.innerText = `✗ Ralat: ${err.message}`;
+                submitBtn.disabled = false;
+            }
+        });
+
+        function toggleCertificateTemplateSelect(checked) {
+            const container = document.getElementById('certificateTemplateContainer');
+            if (checked) {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+    </script>
+
+    <% if (editMode === 'edit') { %>
+    <!-- Add/Edit Level Modal -->
+    <div id="levelModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl w-full max-w-2xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <h3 id="modalTitle" class="text-xl font-bold text-gray-900">Tambah Level Baru</h3>
+                <button type="button" onclick="closeLevelModal()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+            </div>
+            
+            <form id="levelForm" onsubmit="saveLevel(event)">
+                <input type="hidden" id="levelId" name="id">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Nama Level (BM)</label>
+                        <input type="text" id="levelName" required class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Nama Level (EN)</label>
+                        <input type="text" id="levelNameEn" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Penerangan (BM)</label>
+                        <textarea id="levelDesc" rows="2" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Penerangan (EN)</label>
+                        <textarea id="levelDescEn" rows="2" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Kumpulan Sasaran (BM)</label>
+                        <input type="text" id="levelTarget" placeholder="Contoh: Atlet peringkat kebangsaan" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Kumpulan Sasaran (EN)</label>
+                        <input type="text" id="levelTargetEn" placeholder="Contoh: Athlete at national level" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Anggaran Masa (BM)</label>
+                        <input type="text" id="levelDuration" placeholder="Contoh: 10 - 15 minit" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Anggaran Masa (EN)</label>
+                        <input type="text" id="levelDurationEn" placeholder="Contoh: 10 - 15 mins" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Susunan (Order)</label>
+                        <input type="number" id="levelOrder" value="1" min="1" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex items-center mt-6">
+                        <input type="checkbox" id="levelLocked" class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
+                        <label for="levelLocked" class="ml-2 text-sm font-semibold text-gray-700">Kunci Level (Locked)</label>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 border-t pt-4">
+                    <button type="submit" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 rounded-lg transition" id="saveLevelBtn">Simpan</button>
+                    <button type="button" onclick="closeLevelModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 rounded-lg transition">Batal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Levels Manager JS -->
+    <script>
+        const moduleId = '<%= module ? module._id : "" %>';
+        
+        async function loadLevels() {
+            if (!moduleId) return;
+            const container = document.getElementById('levels-list');
+            try {
+                const res = await fetch(`/api/levels/module/${moduleId}`);
+                const result = await res.json();
+                if (result.success && result.data.length > 0) {
+                    container.innerHTML = result.data.map(lvl => {
+                        // Secure stringifying for HTML onclick arguments
+                        const safeLvl = encodeURIComponent(JSON.stringify(lvl));
+                        return `
+                        <div class="bg-white p-4 rounded-xl border border-purple-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition hover:border-purple-200">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded font-bold">Order ${lvl.order}</span>
+                                    <h4 class="font-bold text-gray-800 text-base">${lvl.name}</h4>
+                                    ${lvl.name_en ? `<span class="text-xs text-gray-400">/ ${lvl.name_en}</span>` : ''}
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">${lvl.description || 'Tiada penerangan.'}</p>
+                                <div class="flex flex-wrap gap-x-4 mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                                    <span><strong>Sasaran:</strong> ${lvl.targetAudience || '-'} ${lvl.targetAudience_en ? `(${lvl.targetAudience_en})` : ''}</span>
+                                    <span>|</span>
+                                    <span><strong>Masa:</strong> ${lvl.duration || '-'} ${lvl.duration_en ? `(${lvl.duration_en})` : ''}</span>
+                                    ${lvl.isLocked ? `<span>|</span><span class="text-red-500 font-bold">✓ Terkunci</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="openEditLevelModal('${safeLvl}')" class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-semibold transition">Edit</button>
+                                <button type="button" onclick="deleteLevel('${lvl._id}')" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-semibold transition">Padam</button>
+                            </div>
+                        </div>
+                    `;
+                    }).join('');
+                } else {
+                    container.innerHTML = '<p class="text-sm text-gray-500 italic p-4 text-center bg-white rounded-xl border">Tiada peringkat (levels) didaftarkan untuk modul ini.</p>';
+                }
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<p class="text-sm text-red-500 font-semibold p-4 text-center bg-white rounded-xl border">Gagal memuatkan peringkat.</p>';
+            }
+        }
+
+        // Toggle levels manager based on page hasLevels checkbox
+        const hasLevelsCheckbox = document.getElementById('hasLevels');
+        const levelsManagerSection = document.getElementById('levels-manager-section');
+        if (hasLevelsCheckbox && levelsManagerSection) {
+            hasLevelsCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    levelsManagerSection.classList.remove('hidden');
+                    loadLevels();
+                } else {
+                    levelsManagerSection.classList.add('hidden');
+                }
+            });
+            // Initial load
+            if (hasLevelsCheckbox.checked) {
+                loadLevels();
+            }
+        }
+
+        function openAddLevelModal() {
+            document.getElementById('modalTitle').innerText = 'Tambah Level Baru';
+            document.getElementById('levelId').value = '';
+            document.getElementById('levelForm').reset();
+            document.getElementById('levelModal').classList.remove('hidden');
+        }
+
+        function openEditLevelModal(encodedLvl) {
+            const lvl = JSON.parse(decodeURIComponent(encodedLvl));
+            document.getElementById('modalTitle').innerText = 'Edit Level';
+            document.getElementById('levelId').value = lvl._id;
+            document.getElementById('levelName').value = lvl.name || '';
+            document.getElementById('levelNameEn').value = lvl.name_en || '';
+            document.getElementById('levelDesc').value = lvl.description || '';
+            document.getElementById('levelDescEn').value = lvl.description_en || '';
+            document.getElementById('levelTarget').value = lvl.targetAudience || '';
+            document.getElementById('levelTargetEn').value = lvl.targetAudience_en || '';
+            document.getElementById('levelDuration').value = lvl.duration || '';
+            document.getElementById('levelDurationEn').value = lvl.duration_en || '';
+            document.getElementById('levelOrder').value = lvl.order || 1;
+            document.getElementById('levelLocked').checked = lvl.isLocked || false;
+            document.getElementById('levelModal').classList.remove('hidden');
+        }
+
+        function closeLevelModal() {
+            document.getElementById('levelModal').classList.add('hidden');
+        }
+
+        async function saveLevel(e) {
+            e.preventDefault();
+            const id = document.getElementById('levelId').value;
+            const data = {
+                moduleId,
+                name: document.getElementById('levelName').value,
+                name_en: document.getElementById('levelNameEn').value,
+                description: document.getElementById('levelDesc').value,
+                description_en: document.getElementById('levelDescEn').value,
+                targetAudience: document.getElementById('levelTarget').value,
+                targetAudience_en: document.getElementById('levelTargetEn').value,
+                duration: document.getElementById('levelDuration').value,
+                duration_en: document.getElementById('levelDurationEn').value,
+                order: parseInt(document.getElementById('levelOrder').value) || 1,
+                isLocked: document.getElementById('levelLocked').checked
+            };
+
+            const url = id ? `/api/levels/${id}` : '/api/levels';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    closeLevelModal();
+                    loadLevels();
+                } else {
+                    alert(result.message || 'Ralat menyimpan level');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Ralat sistem untuk menyimpan level');
+            }
+        }
+
+        async function deleteLevel(id) {
+            if (!confirm('Adakah anda pasti untuk memadam level ini?')) return;
+            try {
+                const res = await fetch(`/api/levels/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    loadLevels();
+                } else {
+                    alert(result.message || 'Gagal memadam level');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Ralat sistem untuk memadam level');
+            }
+        }
+    </script>
+    <% } %>
+</body>
+</html>

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'ms' %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= (locals.branding && locals.branding.siteName) ? locals.branding.siteName : __('site_title') %> - <%= __('welcome') %></title>
+    <% if (locals.branding && locals.branding.faviconUrl) { %>
+    <link rel="icon" href="<%= branding.faviconUrl %>">
+    <% } %>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: <%= locals.branding?.primaryColor || '#4f46e5' %>;
+        }
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .tab-active {
+            background-color: white !important;
+            color: #0f172a !important; /* slate-900 */
+            font-weight: 700 !important;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06) !important;
+        }
+        .tab-inactive {
+            color: #475569 !important; /* slate-600 */
+            font-weight: 500 !important;
+        }
+        .tab-inactive:hover {
+            color: #0f172a !important;
+        }
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .fade-in { animation: fadeInUp 0.5s ease-out forwards; }
+        
+        .bg-primary { background-color: var(--primary-color); }
+        .text-primary { color: var(--primary-color); }
+        .border-primary:focus { border-color: var(--primary-color); }
+        .ring-primary:focus { --tw-ring-color: var(--primary-color); }
+        
+        /* Styles to support TinyMCE HTML output in left column */
+        .prose p { margin-bottom: 1em; }
+        .prose ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1em; }
+        .prose ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 1em; }
+        .prose strong { font-weight: 700; }
+        .prose a { color: var(--primary-color); text-decoration: underline; }
+        .prose table { width: 100%; border-collapse: collapse; margin-bottom: 1.5em; border: 1px solid #e2e8f0; }
+        .prose th, .prose td { border: 1px solid #e2e8f0; padding: 0.75rem 1rem; text-align: left; }
+        .prose th { background-color: #f8fafc; font-weight: 700; }
+        .prose blockquote { border-left: 4px solid var(--primary-color); padding-left: 1rem; color: #475569; font-style: italic; margin-bottom: 1.5em; }
+        .prose h1 { font-size: 1.875rem; font-weight: 800; margin-top: 1.5em; margin-bottom: 0.5em; color: #0f172a; line-height: 1.25; }
+        .prose h2 { font-size: 1.5rem; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.5em; color: #0f172a; line-height: 1.25; }
+        .prose h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1.5em; margin-bottom: 0.5em; color: #0f172a; }
+        .prose h4 { font-size: 1.125rem; font-weight: 600; margin-top: 1.5em; margin-bottom: 0.5em; color: #0f172a; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-gray-100">
+
+    <!-- Top Header -->
+    <nav class="bg-[#0f172a] text-white py-4 px-6 md:px-12 z-20 relative shadow-md">
+        <div class="max-w-6xl mx-auto flex justify-between items-center w-full">
+            <div class="flex items-center gap-4">
+                <% if (locals.branding && locals.branding.logoUrl) { %>
+                    <img src="<%= branding.logoUrl %>" alt="Logo" class="h-6 sm:h-8 md:h-10 w-auto object-contain">
+                <% } else { %>
+                    <h1 class="text-lg md:text-xl font-extrabold uppercase tracking-wider"><%= (locals.branding && locals.branding.siteName) ? locals.branding.siteName : __('site_title') %></h1>
+                <% } %>
+            </div>
+            
+            <div class="flex items-center gap-4 md:gap-6">
+                <!-- Dynamic Menu -->
+                <div class="hidden md:flex items-center gap-6">
+                    <% if (locals.branding && branding.showMenu && branding.menuLinks && branding.menuLinks.length > 0) { %>
+                        <% branding.menuLinks.forEach(link => { %>
+                            <a href="<%= link.url %>" class="text-sm font-medium hover:text-gray-300 transition-colors"><%= lang === 'en' ? (link.label_en || ((link.label||'').trim().toLowerCase() === 'modul' ? 'Modules' : ((link.label||'').trim().toLowerCase() === 'hubungi kami' ? 'Contact Us' : link.label))) : link.label %></a>
+                        <% }) %>
+                    <% } %>
+                    <% if (locals.navPages && navPages.length > 0) { %>
+                        <% navPages.forEach(p => { %>
+                            <a href="/page/<%= p.slug %>" class="text-sm font-medium hover:text-gray-300 transition-colors"><%= lang === 'en' ? (p.title_en || p.title) : p.title %></a>
+                        <% }) %>
+                    <% } %>
+                </div>
+
+                <!-- Language Switcher -->
+                <div class="flex items-center gap-2 bg-white/10 rounded-lg p-1 border border-white/20">
+                    <a href="/ms" class="text-xs px-2.5 py-1 rounded font-semibold transition-all <%= lang === 'ms' ? 'bg-white text-gray-900' : 'text-white/70 hover:text-white' %>">BM</a>
+                    <a href="/en" class="text-xs px-2.5 py-1 rounded font-semibold transition-all <%= lang === 'en' ? 'bg-white text-gray-900' : 'text-white/70 hover:text-white' %>">EN</a>
+                </div>
+
+                <!-- Mobile Menu Toggle (Hamburger) -->
+                <button onclick="toggleMobileMenu()" class="md:hidden text-white hover:text-gray-300 focus:outline-none p-1 rounded-lg hover:bg-white/10 transition">
+                    <svg id="mobile-menu-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div id="mobile-drawer" class="hidden md:hidden bg-[#0f172a] border-t border-white/10 text-white py-3 px-6 space-y-1 transition-all duration-300 z-10">
+        <% if (locals.branding && branding.showMenu && branding.menuLinks && branding.menuLinks.length > 0) { %>
+            <% branding.menuLinks.forEach(link => { %>
+                <a href="<%= link.url %>" class="block text-sm font-medium py-2 border-b border-white/5 hover:text-orange-400 transition-colors"><%= lang === 'en' ? (link.label_en || ((link.label||'').trim().toLowerCase() === 'modul' ? 'Modules' : ((link.label||'').trim().toLowerCase() === 'hubungi kami' ? 'Contact Us' : link.label))) : link.label %></a>
+            <% }) %>
+        <% } %>
+        <% if (locals.navPages && navPages.length > 0) { %>
+            <% navPages.forEach(p => { %>
+                <a href="/page/<%= p.slug %>" class="block text-sm font-medium py-2 border-b border-white/5 hover:text-orange-400 transition-colors"><%= lang === 'en' ? (p.title_en || p.title) : p.title %></a>
+            <% }) %>
+        <% } %>
+    </div>
+
+    <script>
+        function toggleMobileMenu() {
+            const drawer = document.getElementById('mobile-drawer');
+            const icon = document.getElementById('mobile-menu-icon');
+            if (drawer.classList.contains('hidden')) {
+                drawer.classList.remove('hidden');
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />`;
+            } else {
+                drawer.classList.add('hidden');
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />`;
+            }
+        }
+    </script>
+
+    <!-- Banner Section -->
+    <% 
+        let bannerStyle = "background-color: #b91c1c;"; // default red
+        if (locals.branding && branding.homeBannerImage) {
+            bannerStyle = `background-image: url('${branding.homeBannerImage}'); background-size: cover; background-position: center;`;
+        }
+    %>
+    <header class="pt-12 pb-24 md:pb-32 px-6 md:px-12 relative shadow-inner flex items-center min-h-[180px]" style="<%= bannerStyle %>">
+        <div class="absolute inset-0 bg-red-900/40 mix-blend-multiply"></div>
+        <div class="relative z-10 max-w-6xl mx-auto w-full">
+            <% if (locals.branding && branding.showBannerTitle !== false) { %>
+                <h1 class="text-3xl md:text-4xl font-bold text-white drop-shadow-md">
+                    <%= lang === 'en' ? ((locals.branding && branding.homeBannerTitle_en) ? branding.homeBannerTitle_en : 'Modules') : ((locals.branding && branding.homeBannerTitle) ? branding.homeBannerTitle : 'Modul') %>
+                </h1>
+            <% } %>
+        </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <% 
+        let bgStyle = "background-color: #f3f4f6;"; // default light gray
+        if (locals.branding && branding.homeBgImage) {
+            bgStyle = `background-image: url('${branding.homeBgImage}'); background-size: cover; background-position: center; background-attachment: fixed;`;
+        }
+    %>
+    <main class="flex-1 relative py-8 px-4 sm:px-6" style="<%= bgStyle %>">
+        <!-- Overlay if there is a bg image to make content readable -->
+        <% if (locals.branding && branding.homeBgImage) { %>
+            <div class="absolute inset-0 bg-white/60 backdrop-blur-sm z-0"></div>
+        <% } %>
+
+        <!-- Unified Container for Split Screen Layout -->
+        <div class="relative z-10 max-w-6xl mx-auto -mt-20 md:-mt-28 bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100/80 fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch">
+                
+                <% if (locals.branding && branding.showRegistrationForm !== false) { %>
+                    <!-- LEFT COLUMN: Registration / Login Box (lg:col-span-5) -->
+                    <div class="lg:col-span-5 bg-white border-r border-slate-100 flex flex-col justify-between">
+                        <div>
+                            <div class="bg-gradient-to-br from-slate-900 to-slate-800 px-6 py-6 text-center text-white relative">
+                                <p class="text-xs text-slate-300 font-medium"><%= lang === 'en' ? (branding.homeFormSubtitle_en || 'Register or resume your athlete learning path') : (branding.homeFormSubtitle || 'Daftar atau sambung modul latihan atlet anda') %></p>
+                            </div>
+
+                            <!-- Error/Info Message -->
+                            <% if (locals.error) { %>
+                                <% 
+                                    const isInfo = error.includes('berdaftar') || error.includes('registered') || error.includes('ditemui') || error.includes('found');
+                                %>
+                                <div class="mx-6 mt-4 p-4 rounded-2xl border <%= isInfo ? 'bg-blue-50/50 border-blue-200 text-blue-800' : 'bg-red-50/50 border-red-200 text-red-800' %>">
+                                    <div class="flex items-start gap-2.5">
+                                        <% if (isInfo) { %>
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        <% } else { %>
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        <% } %>
+                                        <div>
+                                            <p class="font-bold text-xs"><%= isInfo ? (lang === 'en' ? 'Account Active' : 'Akaun Sedia Ada') : __('entry_error_label') %></p>
+                                            <p class="text-xs mt-0.5 <%= isInfo ? 'text-blue-700' : 'text-red-700' %>"><%= error %></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% } %>
+
+                            <!-- Tab Switcher -->
+                            <div class="flex bg-slate-100 rounded-xl p-1 mx-6 mt-6 border border-slate-200/50">
+                                <button onclick="switchTab('new')" id="tab-new" class="flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all duration-200 tab-active focus:outline-none">
+                                    <%= __('entry_tab_new') %>
+                                </button>
+                                <button onclick="switchTab('resume')" id="tab-resume" class="flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all duration-200 tab-inactive focus:outline-none">
+                                    <%= __('entry_tab_resume') %>
+                                </button>
+                            </div>
+
+                            <div class="p-6">
+                                <!-- Form Pengguna Baru -->
+                                <form id="form-new" action="/access" method="POST" class="space-y-4">
+                                    <input type="hidden" name="action" value="new">
+                                    
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide"><%= __('entry_field_fullname') %> *</label>
+                                        <input type="text" name="fullName" required 
+                                            oninput="if(this.value.trim().length > 0) { document.getElementById('fullNameNote').classList.remove('hidden'); } else { document.getElementById('fullNameNote').classList.add('hidden'); }"
+                                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all text-sm text-slate-800 placeholder-slate-400 font-medium"
+                                            placeholder="<%= __('entry_field_fullname_placeholder') %>"
+                                            style="text-transform: uppercase;">
+                                        <div id="fullNameNote" class="hidden mt-2 flex items-start gap-1.5 text-[10px] text-amber-600 bg-amber-50/50 border border-amber-200 rounded-xl p-3 leading-relaxed">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0 text-amber-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                            <span><strong><%= __('entry_important') %>:</strong> <%= __('entry_field_fullname_hint') %></span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide"><%= __('entry_field_ic') %> *</label>
+                                        <input type="text" name="icNumber" required 
+                                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all text-sm text-slate-800 placeholder-slate-400 font-medium"
+                                            placeholder="<%= __('entry_field_ic_placeholder') %>" maxlength="12" pattern="[0-9]{12}">
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide"><%= __('entry_field_gender') %> *</label>
+                                            <select name="jantina" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all text-sm text-slate-800 font-medium bg-white">
+                                                <option value=""><%= __('entry_field_gender_select') %></option>
+                                                <option value="Lelaki"><%= __('entry_field_gender_male') %></option>
+                                                <option value="Perempuan"><%= __('entry_field_gender_female') %></option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide"><%= __('entry_field_age') %> *</label>
+                                            <input type="number" name="umur" required min="10" max="60"
+                                                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all text-sm text-slate-800 placeholder-slate-400 font-medium"
+                                                placeholder="<%= __('entry_field_age_placeholder') %>">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide"><%= __('entry_field_state') %> *</label>
+                                        <select name="negeri" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all text-sm text-slate-800 font-medium bg-white">
+                                            <option value=""><%= __('entry_field_state_select') %></option>
+                                            <option>Johor</option>
+                                            <option>Kedah</option>
+                                            <option>Kelantan</option>
+                                            <option>Melaka</option>
+                                            <option>Negeri Sembilan</option>
+                                            <option>Pahang</option>
+                                            <option>Perak</option>
+                                            <option>Perlis</option>
+                                            <option>Pulau Pinang</option>
+                                            <option>Sabah</option>
+                                            <option>Sarawak</option>
+                                            <option>Selangor</option>
+                                            <option>Terengganu</option>
+                                            <option>W.P. Kuala Lumpur</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide"><%= __('entry_field_sport') %> *</label>
+                                        <input type="text" name="sukan" required id="sukanInput" list="sportsList"
+                                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all text-sm text-slate-800 placeholder-slate-400 font-medium"
+                                            placeholder="<%= __('entry_field_sport_placeholder') %>"
+                                            style="text-transform: uppercase;" autocomplete="off">
+                                        <datalist id="sportsList">
+                                            <% (locals.sports || []).forEach(sport => { %>
+                                                <option value="<%= sport.name.toUpperCase() %>"></option>
+                                              <% }) %>
+                                        </datalist>
+                                    </div>
+
+                                    <button type="submit" 
+                                        class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 mt-2 rounded-xl shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all transform hover:scale-[1.01] active:scale-[0.99] text-xs flex items-center justify-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                        <%= __('entry_btn_start') %>
+                                    </button>
+                                </form>
+
+                                <!-- Form Semak Akaun -->
+                                <form id="form-resume" action="/access" method="POST" class="space-y-4 hidden">
+                                    <input type="hidden" name="action" value="resume">
+                                    
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide"><%= __('entry_field_fullname') %> *</label>
+                                        <input type="text" name="fullName" required 
+                                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all text-sm text-slate-800 placeholder-slate-400 font-medium"
+                                            placeholder="<%= __('entry_resume_name_placeholder') %>"
+                                            style="text-transform: uppercase;">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide"><%= __('entry_field_ic') %> *</label>
+                                        <input type="text" name="icNumber" required 
+                                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all text-sm text-slate-800 placeholder-slate-400 font-medium"
+                                            placeholder="<%= __('entry_resume_ic_placeholder') %>" maxlength="12" pattern="[0-9]{12}">
+                                    </div>
+
+                                    <button type="submit" 
+                                        class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 mt-2 rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all transform hover:scale-[1.01] active:scale-[0.99] text-xs flex items-center justify-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <%= __('entry_btn_resume') %>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- RIGHT COLUMN: Custom HTML / Info (lg:col-span-7 atau lg:col-span-12 jika tiada form) -->
+                <div class="<%= (locals.branding && branding.showRegistrationForm !== false) ? 'lg:col-span-7' : 'lg:col-span-12' %> bg-slate-50 p-6 sm:p-10 flex flex-col justify-center">
+                    <div class="prose text-gray-700 leading-relaxed text-sm sm:text-base mx-auto max-w-3xl">
+                        <% 
+                            let displayHtml = null;
+                            if (locals.branding) {
+                                if (locals.lang === 'en' && branding.homeLeftColumnHtml_en) {
+                                    displayHtml = branding.homeLeftColumnHtml_en;
+                                } else if (branding.homeLeftColumnHtml) {
+                                    displayHtml = branding.homeLeftColumnHtml;
+                                }
+                            }
+                        %>
+                        <% if (displayHtml) { %>
+                            <%- displayHtml %>
+                        <% } else { %>
+                            <% if (locals.lang === 'en') { %>
+                                <p>This learning module is prepared starting from the basic learning stage, covering various aspects of athlete well-being topics to strengthen the high-performance sports ecosystem.</p>
+                                <br>
+                                <p>Upon completing the quiz at the end of each module, you can print or download the Certificate of Participation.</p>
+                            <% } else { %>
+                                <p>Modul pembelajaran ini disediakan dari peringkat pembelajaran asas yang merangkumi pelbagai aspek topik kesejahteraan atlet dalam mengukuhkan ekosistem sukan berprestasi tinggi.</p>
+                                <br>
+                                <p>Setelah melengkapkan kuiz di akhir setiap modul, anda boleh mencetak atau memuat turun Sijil Penyertaan.</p>
+                            <% } %>
+                        <% } %>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white px-5 py-6 text-center border-t border-gray-200 z-10 relative">
+        <div class="max-w-4xl mx-auto flex flex-col items-center gap-3">
+            <p class="text-xs text-gray-500">
+                <%- (locals.branding && branding.footerText) ? branding.footerText : __('entry_footer') %>
+            </p>
+            
+            <% if (locals.branding && branding.footerLinks && branding.footerLinks.length > 0) { %>
+                <div class="flex flex-wrap justify-center gap-3 text-xs text-gray-600 font-medium">
+                    <% branding.footerLinks.forEach((link, idx) => { %>
+                        <a href="<%= link.url %>" class="hover:text-primary transition-colors hover:underline"><%= link.label %></a>
+                        <% if (idx < branding.footerLinks.length - 1) { %><span class="text-gray-300">|</span><% } %>
+                    <% }) %>
+                </div>
+            <% } %>
+            
+            <div class="text-xs text-gray-400 mt-2">
+                <a href="/auth/login" class="hover:text-primary transition-colors">Admin / Pengajar Login</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function switchTab(tab) {
+            const formNew = document.getElementById('form-new');
+            const formResume = document.getElementById('form-resume');
+            const tabNew = document.getElementById('tab-new');
+            const tabResume = document.getElementById('tab-resume');
+
+            if (tab === 'new') {
+                formNew.classList.remove('hidden');
+                formResume.classList.add('hidden');
+                tabNew.classList.add('tab-active');
+                tabNew.classList.remove('tab-inactive', 'border-transparent');
+                tabResume.classList.add('tab-inactive', 'border-transparent');
+                tabResume.classList.remove('tab-active');
+            } else {
+                formNew.classList.add('hidden');
+                formResume.classList.remove('hidden');
+                tabResume.classList.add('tab-active');
+                tabResume.classList.remove('tab-inactive', 'border-transparent');
+                tabNew.classList.add('tab-inactive', 'border-transparent');
+                tabNew.classList.remove('tab-active');
+            }
+        }
+
+        // Auto-format IC & Calculate Age/Gender
+        document.querySelectorAll('input[name="icNumber"]').forEach(input => {
+            input.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '').slice(0, 12);
+                
+                const val = this.value;
+                const form = this.closest('form');
+                if (!form) return;
+                
+                const ageInput = form.querySelector('input[name="umur"]');
+                const genderSelect = form.querySelector('select[name="jantina"]');
+                
+                // Auto calculate age if at least 2 digits
+                if (val.length >= 2 && ageInput) {
+                    let yy = parseInt(val.substring(0, 2), 10);
+                    let currentYear = new Date().getFullYear();
+                    // Assuming cutoff year is 30 (e.g. 35 -> 1935, 05 -> 2005)
+                    let birthYear = yy > 30 ? 1900 + yy : 2000 + yy;
+                    ageInput.value = currentYear - birthYear;
+                    ageInput.setAttribute('readonly', 'true');
+                    ageInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+                } else if (ageInput) {
+                    ageInput.value = '';
+                    ageInput.removeAttribute('readonly');
+                    ageInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                }
+                
+                // Auto select gender if 12 digits
+                if (val.length === 12 && genderSelect) {
+                    let lastDigit = parseInt(val.substring(11, 12), 10);
+                    genderSelect.value = (lastDigit % 2 === 0) ? 'Perempuan' : 'Lelaki';
+                    genderSelect.style.pointerEvents = 'none';
+                    genderSelect.classList.add('bg-gray-100');
+                } else if (genderSelect) {
+                    genderSelect.value = '';
+                    genderSelect.style.pointerEvents = 'auto';
+                    genderSelect.classList.remove('bg-gray-100');
+                }
+            });
+        });
+
+        // Auto-uppercase fullName
+        const fullNameInputs = document.querySelectorAll('input[name="fullName"]');
+        fullNameInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                const pos = this.selectionStart;
+                this.value = this.value.toUpperCase();
+                this.setSelectionRange(pos, pos);
+            });
+        });
+
+        // Auto-uppercase sukan
+        const sukanInput = document.getElementById('sukanInput');
+        if (sukanInput) {
+            sukanInput.addEventListener('input', function() {
+                const pos = this.selectionStart;
+                this.value = this.value.toUpperCase();
+                this.setSelectionRange(pos, pos);
+            });
+        }
+
+        // Custom localized validation messages
+        const lang = "<%= lang || 'ms' %>";
+        const messages = {
+            ms: {
+                valueMissing: "Sila isi ruangan ini.",
+                patternMismatch: "Format tidak sah (Sila masukkan 12 digit nombor IC tanpa sempang).",
+                rangeUnderflow: "Nilai minimum mestilah sekurang-kurangnya {min}.",
+                rangeOverflow: "Nilai maksimum mestilah {max} ke bawah.",
+                typeMismatch: "Sila masukkan nilai yang betul."
+            },
+            en: {
+                valueMissing: "Please fill out this field.",
+                patternMismatch: "Invalid format (Please enter 12-digit IC number without dashes).",
+                rangeUnderflow: "Value must be at least {min}.",
+                rangeOverflow: "Value must be less than or equal to {max}.",
+                typeMismatch: "Please enter a valid value."
+            }
+        };
+
+        const currentMsgs = messages[lang] || messages.ms;
+        const allInputs = document.querySelectorAll("input, select, textarea");
+
+        allInputs.forEach(input => {
+            input.addEventListener("invalid", function(e) {
+                let msg = currentMsgs.valueMissing;
+
+                if (input.validity.valueMissing) {
+                    msg = currentMsgs.valueMissing;
+                } else if (input.validity.patternMismatch) {
+                    msg = currentMsgs.patternMismatch;
+                } else if (input.validity.rangeUnderflow) {
+                    msg = currentMsgs.rangeUnderflow.replace("{min}", input.getAttribute("min"));
+                } else if (input.validity.rangeOverflow) {
+                    msg = currentMsgs.rangeOverflow.replace("{max}", input.getAttribute("max"));
+                } else if (input.validity.typeMismatch) {
+                    msg = currentMsgs.typeMismatch;
+                }
+                
+                input.setCustomValidity(msg);
+            });
+
+            input.addEventListener("input", function() {
+                input.setCustomValidity("");
+            });
+
+            input.addEventListener("change", function() {
+                input.setCustomValidity("");
+            });
+        });
+    </script>
+</body>
+</html>

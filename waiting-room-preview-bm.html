@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menyediakan Profil - Sila Tunggu - MACE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-md w-full bg-white rounded-2xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-8 text-center">
+        <!-- Loader Spinner -->
+        <div class="flex justify-center mb-6">
+            <svg class="animate-spin h-16 w-16 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+
+        <!-- Waiting Room Badge -->
+        <div class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full mb-4 border border-emerald-100">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Anda berada di Ruang Menunggu
+        </div>
+
+        <h1 class="text-2xl font-extrabold text-gray-900 mb-3 uppercase tracking-tight">
+            Profil Anda Sedang Disediakan
+        </h1>
+        <p class="text-gray-600 mb-6 text-sm leading-relaxed">
+            Sila tunggu sebentar sementara sistem kami menyediakan profil pendaftaran anda. Ini bagi memastikan kelancaran sesi pembelajaran anda.
+        </p>
+
+        <!-- Countdown -->
+        <div class="bg-emerald-50 rounded-xl p-4 mb-6 border border-emerald-100">
+            <p class="text-sm font-semibold text-emerald-800">
+                Melancarkan portal dalam masa <span id="countdown" class="text-lg font-bold">8</span> saat...
+            </p>
+        </div>
+
+        <p class="text-[11px] text-gray-400">
+            Data anda selamat disimpan. Sila jangan tutup halaman ini.
+        </p>
+    </div>
+
+    <script>
+        let timeLeft = 8;
+        const countdownEl = document.getElementById('countdown');
+        const interval = setInterval(() => {
+            timeLeft--;
+            countdownEl.innerText = timeLeft;
+            if (timeLeft <= 0) {
+                timeLeft = 8; // Reset secara lokal untuk simulasi berulang static preview
+                countdownEl.innerText = timeLeft;
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
