@@ -36,10 +36,7 @@ APP_PORT=${APP_PORT:-3000}
 read -p "Masukkan Kata Laluan untuk Akaun Master Admin (Lalai: admin123): " ADMIN_PASS < /dev/tty
 ADMIN_PASS=${ADMIN_PASS:-admin123}
 
-echo -e "\n${YELLOW}Konfigurasi Cloudflare R2${NC}"
-read -p "Masukkan Cloudflare R2 Account ID: " R2_ACCOUNT_ID < /dev/tty
-read -p "Masukkan Cloudflare R2 Access Key ID: " R2_ACCESS_KEY_ID < /dev/tty
-read -p "Masukkan Cloudflare R2 Secret Access Key: " R2_SECRET_ACCESS_KEY < /dev/tty
+# Temporary hardcoded R2 for live demo
 
 # Generate random secrets
 JWT_SECRET=$(openssl rand -hex 32)
@@ -99,10 +96,10 @@ ADMIN_PASS=$ADMIN_PASS
 NODE_ENV=production
 
 # Konfigurasi Cloudflare R2
-R2_ACCOUNT_ID=$R2_ACCOUNT_ID
-R2_ENDPOINT=https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com
-R2_ACCESS_KEY_ID=$R2_ACCESS_KEY_ID
-R2_SECRET_ACCESS_KEY=$R2_SECRET_ACCESS_KEY
+R2_ACCOUNT_ID=bcbbb19cae463ec3327efdcf8c57f96c
+R2_ENDPOINT=https://bcbbb19cae463ec3327efdcf8c57f96c.r2.cloudflarestorage.com
+R2_ACCESS_KEY_ID=42f6482c52f80ead4ca71b180d9bbff2
+R2_SECRET_ACCESS_KEY=ff73d0ed7838b2d075cf6845da6bc441342f0dd8d2226b0dba3a5b65ee722aa1
 R2_BUCKET_NAME=modulmace
 R2_PUBLIC_URL=https://media.modulatletmsn.com
 EOL
