@@ -36,6 +36,11 @@ APP_PORT=${APP_PORT:-3000}
 read -p "Masukkan Kata Laluan untuk Akaun Master Admin (Lalai: admin123): " ADMIN_PASS < /dev/tty
 ADMIN_PASS=${ADMIN_PASS:-admin123}
 
+echo -e "\n${YELLOW}Konfigurasi Cloudflare R2${NC}"
+read -p "Masukkan Cloudflare R2 Account ID: " R2_ACCOUNT_ID < /dev/tty
+read -p "Masukkan Cloudflare R2 Access Key ID: " R2_ACCESS_KEY_ID < /dev/tty
+read -p "Masukkan Cloudflare R2 Secret Access Key: " R2_SECRET_ACCESS_KEY < /dev/tty
+
 # Generate random secrets
 JWT_SECRET=$(openssl rand -hex 32)
 SESSION_SECRET=$(openssl rand -hex 48)
@@ -93,11 +98,11 @@ ADMIN_USER=admin
 ADMIN_PASS=$ADMIN_PASS
 NODE_ENV=production
 
-# Konfigurasi Cloudflare R2 (Lalai/Default)
-R2_ACCOUNT_ID=your_account_id_here
-R2_ENDPOINT=https://your_account_id_here.r2.cloudflarestorage.com
-R2_ACCESS_KEY_ID=your_access_key_here
-R2_SECRET_ACCESS_KEY=your_secret_access_key_here
+# Konfigurasi Cloudflare R2
+R2_ACCOUNT_ID=$R2_ACCOUNT_ID
+R2_ENDPOINT=https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com
+R2_ACCESS_KEY_ID=$R2_ACCESS_KEY_ID
+R2_SECRET_ACCESS_KEY=$R2_SECRET_ACCESS_KEY
 R2_BUCKET_NAME=modulmace
 R2_PUBLIC_URL=https://media.modulatletmsn.com
 EOL
